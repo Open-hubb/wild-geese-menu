@@ -2,55 +2,54 @@
 
 import { useState, useCallback } from "react";
 import Header from "@/components/Header";
-import CategoryNav from "@/components/CategoryNav";
-import MenuSection from "@/components/MenuSection";
+import CategoryGrid from "@/components/CategoryGrid";
+import CategoryModal from "@/components/CategoryModal";
 import FloatingBar from "@/components/FloatingBar";
 import CartSheet from "@/components/CartSheet";
 import CheckoutModal from "@/components/CheckoutModal";
 import { categories } from "@/data/menu";
 
 export default function Home() {
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
-  const [activeCategory, setActiveCategory] = useState(categories[0].slug);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
 
-  const handleToggle = useCallback((slug: string) => {
-    setOpenCategory((prev) => (prev === slug ? null : slug));
+  const activeCategory = selectedCategory
+    ? categories.find((c) => c.slug === selectedCategory) ?? null
+    : null;
+
+  const handleCategorySelect = useCallback((slug: string) => {
+    setSelectedCategory(slug);
   }, []);
 
-  const handleCategoryClick = useCallback((slug: string) => {
-    setActiveCategory(slug);
-    // Open the category
-    setOpenCategory(slug);
-    // Wait for React to render the open state + animation to begin, then scroll
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        const el = document.getElementById(`category-${slug}`);
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }, 350);
-    });
+  const handleCloseCategory = useCallback(() => {
+    setSelectedCategory(null);
   }, []);
 
   return (
     <main className="pb-28">
       <Header />
-      <CategoryNav
-        activeCategory={activeCategory}
-        onCategoryClick={handleCategoryClick}
-      />
-      <div className="max-w-lg mx-auto">
-        {categories.map((category) => (
-          <MenuSection
-            key={category.slug}
-            category={category}
-            isOpen={openCategory === category.slug}
-            onToggle={() => handleToggle(category.slug)}
-          />
-        ))}
+
+      {/* Section label */}
+      <div className="px-5 pt-2 pb-4">
+        <div className="flex items-center gap-3">
+          <h2 className="font-serif text-lg font-bold text-accent-cream tracking-wide">
+            Our Menu
+          </h2>
+          <div className="flex-1 border-b border-dashed border-border-light/40" />
+          <span className="text-xs text-text-secondary">
+            {categories.length} categories
+          </span>
+        </div>
       </div>
-      <footer className="mt-12 pb-8 text-center">
+
+      <div className="max-w-lg mx-auto">
+        <CategoryGrid
+          categories={categories}
+          onCategorySelect={handleCategorySelect}
+        />
+      </div>
+
+      <footer className="mt-8 pb-8 text-center">
         <div className="w-12 h-px mx-auto bg-gradient-to-r from-transparent via-accent-copper/30 to-transparent mb-4" />
         <p className="text-xs text-text-secondary/50">
           &copy; 2024 The Wild Geese Irish Pub &middot; Freetown, Sierra Leone
@@ -67,6 +66,14 @@ export default function Home() {
           </a>
         </p>
       </footer>
+
+      {/* Category detail modal */}
+      <CategoryModal
+        category={activeCategory}
+        onClose={handleCloseCategory}
+      />
+
+      {/* Cart & Checkout */}
       <FloatingBar onCheckout={() => setIsCheckoutOpen(true)} />
       <CartSheet onCheckout={() => setIsCheckoutOpen(true)} />
       <CheckoutModal
