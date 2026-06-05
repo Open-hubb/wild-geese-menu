@@ -13,7 +13,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
   const { totalPrice } = useCart();
 
   // Build the Flot checkout URL with pre-filled amount
-  const baseUrl = "https://pay.flotme.ai/lagoonda";
+  const baseUrl = "https://pay.flotme.ai/wildgeese";
   const checkoutUrl = totalPrice > 0
     ? `${baseUrl}?amount=${totalPrice}`
     : baseUrl;
