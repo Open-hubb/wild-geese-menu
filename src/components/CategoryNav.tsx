@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useEffect } from "react";
-import { categories } from "@/data/menu";
+import { useMenu } from "@/data/useMenu";
 
 interface CategoryNavProps {
   activeCategory: string;
@@ -12,6 +12,7 @@ export default function CategoryNav({
   activeCategory,
   onCategoryClick,
 }: CategoryNavProps) {
+  const categories = useMenu();
   const navRef = useRef<HTMLDivElement>(null);
   const activeRef = useRef<HTMLButtonElement>(null);
 

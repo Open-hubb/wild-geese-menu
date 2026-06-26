@@ -7,10 +7,11 @@ import CategoryModal from "@/components/CategoryModal";
 import FloatingBar from "@/components/FloatingBar";
 import CartSheet from "@/components/CartSheet";
 import CheckoutModal from "@/components/CheckoutModal";
-import { categories } from "@/data/menu";
+import { useMenu } from "@/data/useMenu";
 import { useCart } from "@/context/CartContext";
 
 export default function Home() {
+  const categories = useMenu();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const { setIsCartOpen } = useCart();
