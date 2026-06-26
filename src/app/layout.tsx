@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Playfair_Display, Inter } from "next/font/google";
 import { CartProvider } from "@/context/CartContext";
 import "./globals.css";
@@ -61,6 +62,10 @@ export default function RootLayout({
     <html lang="en" className={`${playfair.variable} ${inter.variable}`}>
       <body className="min-h-dvh bg-bg-primary text-text-primary font-sans antialiased">
         <CartProvider>{children}</CartProvider>
+        <Script
+          src="https://dashboard.flotme.ai/api/public/tracker.js?id=7cbba528-25a2-4164-a879-fe54b9e9eb2f"
+          strategy="afterInteractive"
+        />
       </body>
     </html>
   );
