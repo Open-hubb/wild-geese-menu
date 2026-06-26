@@ -1,8 +1,12 @@
 "use client";
 
 import { Phone, MapPin } from "lucide-react";
+import { useBranding } from "@/data/useMenu";
 
 export default function Header() {
+  const b = useBranding();
+  const address = b.subtitle || "80 Cape Road, Aberdeen";
+  const phone = b.phone || "099 100 109";
   return (
     <header className="relative px-5 pt-6 pb-5 text-center">
       {/* Subtle warm radial glow behind the logo */}
@@ -25,15 +29,15 @@ export default function Header() {
           className="flex items-center gap-1.5 hover:text-accent-copper transition-colors"
         >
           <MapPin size={12} className="text-accent-copper/70" />
-          <span>80 Cape Road, Aberdeen</span>
+          <span>{address}</span>
         </a>
         <span className="text-border-light">|</span>
         <a
-          href="tel:+23299100109"
+          href={`tel:${phone.replace(/\s/g, "")}`}
           className="flex items-center gap-1.5 hover:text-accent-copper transition-colors"
         >
           <Phone size={12} className="text-accent-copper/70" />
-          <span>099 100 109</span>
+          <span>{phone}</span>
         </a>
       </div>
     </header>
