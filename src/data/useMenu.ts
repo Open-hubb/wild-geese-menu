@@ -59,17 +59,40 @@ function adapt(d: DashboardDoc): MenuCategory[] {
   }));
 }
 
+// Live preview: when embedded by the Flot dashboard editor, it streams the
+// unsaved menu via postMessage. We prefer that draft over the fetched doc.
+let previewDoc: DashboardDoc | null = null;
+const previewSubs = new Set<() => void>();
+function initPreview() {
+  if (typeof window === "undefined" || window.parent === window) return;
+  const w = window as unknown as { __flotPreviewInit?: boolean };
+  if (w.__flotPreviewInit) return;
+  w.__flotPreviewInit = true;
+  window.addEventListener("message", (e: MessageEvent) => {
+    if (e.origin !== "https://dashboard.flotme.ai") return;
+    const data = e.data;
+    if (!data || data.source !== "flot-dashboard" || data.type !== "menu-preview" || !data.menu) return;
+    previewDoc = data.menu as DashboardDoc;
+    previewSubs.forEach((fn) => fn());
+  });
+  window.parent.postMessage({ source: "flot-site", type: "preview-ready" }, "*");
+}
+
 export function useMenu(): MenuCategory[] {
   const [categories, setCategories] = useState<MenuCategory[]>(fallbackCategories);
   useEffect(() => {
     let cancelled = false;
-    fetchDoc().then((d) => {
-      if (!cancelled && d && Array.isArray(d.sections) && d.sections.length) {
-        const adapted = adapt(d);
-        if (adapted.length) setCategories(adapted);
-      }
-    });
-    return () => { cancelled = true; };
+    initPreview();
+    const applyDoc = (d: DashboardDoc | null) => {
+      if (cancelled || !d || !Array.isArray(d.sections) || !d.sections.length) return;
+      const adapted = adapt(d);
+      if (adapted.length) setCategories(adapted);
+    };
+    const onPreview = () => applyDoc(previewDoc);
+    previewSubs.add(onPreview);
+    if (previewDoc) applyDoc(previewDoc);
+    else fetchDoc().then((d) => { if (!previewDoc) applyDoc(d); });
+    return () => { cancelled = true; previewSubs.delete(onPreview); };
   }, []);
   return categories;
 }
@@ -82,10 +105,15 @@ export function useBranding(): Branding {
   const [branding, setBranding] = useState<Branding>(EMPTY_BRANDING);
   useEffect(() => {
     let cancelled = false;
-    fetchDoc().then((d) => {
+    initPreview();
+    const applyDoc = (d: DashboardDoc | null) => {
       if (!cancelled && d && d.branding) setBranding({ ...EMPTY_BRANDING, ...d.branding });
-    });
-    return () => { cancelled = true; };
+    };
+    const onPreview = () => applyDoc(previewDoc);
+    previewSubs.add(onPreview);
+    if (previewDoc) applyDoc(previewDoc);
+    else fetchDoc().then((d) => { if (!previewDoc) applyDoc(d); });
+    return () => { cancelled = true; previewSubs.delete(onPreview); };
   }, []);
   return branding;
 }
