@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import type { MenuItem } from "@/data/menu";
 
 export interface CartItem {
@@ -22,20 +22,55 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+function readSavedItems(): CartItem[] {
+  try {
+    const saved = localStorage.getItem("wild-geese-cart");
+    if (!saved) return [];
+
+    const parsed: unknown = JSON.parse(saved);
+    if (!Array.isArray(parsed)) return [];
+
+    return parsed.filter((entry): entry is CartItem => {
+      if (!entry || typeof entry !== "object") return false;
+      const { item, quantity } = entry as { item?: unknown; quantity?: unknown };
+      if (
+        !item ||
+        typeof item !== "object" ||
+        typeof quantity !== "number" ||
+        !Number.isSafeInteger(quantity) ||
+        quantity < 1
+      ) {
+        return false;
+      }
+      const menuItem = item as Partial<MenuItem>;
+      return typeof menuItem.id === "string" &&
+        typeof menuItem.name === "string" &&
+        typeof menuItem.price === "string";
+    });
+  } catch {
+    return [];
+  }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const storageLoaded = useRef(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("wild-geese-cart");
-    if (saved) {
-      try {
-        setItems(JSON.parse(saved));
-      } catch {}
-    }
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      storageLoaded.current = true;
+      setItems(readSavedItems());
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
+    if (!storageLoaded.current) return;
     localStorage.setItem("wild-geese-cart", JSON.stringify(items));
   }, [items]);
 
