@@ -18,16 +18,95 @@ export interface Branding {
   currency: string;
 }
 
-interface DashboardVariant { label: string; price: number }
+interface DashboardVariant { label: string; price: string }
 interface DashboardItem {
   name: string;
-  price: number;
+  price: string;
   description: string;
-  subHeader: string | null;
-  variants?: DashboardVariant[];
+  subHeader: string;
+  variants: DashboardVariant[];
 }
 interface DashboardSection { id: string; title: string; image: string; items: DashboardItem[] }
-interface DashboardDoc { branding?: Partial<Branding>; sections?: DashboardSection[] }
+interface DashboardDoc { branding?: Partial<Branding>; sections: DashboardSection[] }
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function nonEmptyString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value : null;
+}
+
+function text(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+function price(value: unknown): string | null {
+  return typeof value === "number" && Number.isFinite(value)
+    ? String(value)
+    : typeof value === "string" && value.trim()
+      ? value
+      : null;
+}
+
+function normalizeDoc(value: unknown): DashboardDoc | null {
+  const doc = asRecord(value);
+  if (!doc || !Array.isArray(doc.sections)) return null;
+
+  const sections = doc.sections.flatMap((rawSection) => {
+    const section = asRecord(rawSection);
+    const id = nonEmptyString(section?.id);
+    const title = nonEmptyString(section?.title);
+    if (!section || !id || !title || !Array.isArray(section.items)) return [];
+
+    const items = section.items.flatMap((rawItem): DashboardItem[] => {
+      const item = asRecord(rawItem);
+      const name = nonEmptyString(item?.name);
+      const itemPrice = price(item?.price);
+      if (!item || !name || !itemPrice) return [];
+
+      const variants = Array.isArray(item.variants)
+        ? item.variants.flatMap((rawVariant): DashboardVariant[] => {
+            const variant = asRecord(rawVariant);
+            const label = nonEmptyString(variant?.label);
+            const variantPrice = price(variant?.price);
+            return label && variantPrice ? [{ label, price: variantPrice }] : [];
+          })
+        : [];
+
+      return [{
+        name,
+        price: itemPrice,
+        description: text(item.description),
+        subHeader: text(item.subHeader),
+        variants,
+      }];
+    });
+
+    return items.length ? [{ id, title, image: text(section.image), items }] : [];
+  });
+
+  // A dashboard response without usable sellable items must never replace the
+  // bundled menu: it would turn an API migration or bad draft into an empty site.
+  if (!sections.length) return null;
+
+  const branding = asRecord(doc.branding);
+  return {
+    sections,
+    branding: branding
+      ? {
+          restaurantName: text(branding.restaurantName),
+          subtitle: text(branding.subtitle),
+          phone: text(branding.phone),
+          logoUrl: text(branding.logoUrl),
+          checkoutUrl: text(branding.checkoutUrl),
+          currency: text(branding.currency),
+        }
+      : undefined,
+  };
+}
 
 // One shared fetch for the whole document, so useMenu() and useBranding()
 // don't each hit the network.
@@ -35,14 +114,14 @@ let docPromise: Promise<DashboardDoc | null> | null = null;
 function fetchDoc(): Promise<DashboardDoc | null> {
   if (!docPromise) {
     docPromise = fetch(MENU_API)
-      .then((r) => (r.ok ? r.json() : null))
+      .then(async (r) => (r.ok ? normalizeDoc(await r.json()) : null))
       .catch(() => null);
   }
   return docPromise;
 }
 
 function adapt(d: DashboardDoc): MenuCategory[] {
-  return (d.sections || []).map((s) => ({
+  return d.sections.map((s) => ({
     id: s.id,
     name: s.title,
     slug: s.id,
@@ -54,7 +133,7 @@ function adapt(d: DashboardDoc): MenuCategory[] {
       price:
         it.variants && it.variants.length
           ? it.variants.map((v) => `${v.label} ${v.price}`).join(" / ")
-          : String(it.price ?? ""),
+          : it.price,
     })),
   }));
 }
@@ -72,10 +151,16 @@ function initPreview() {
     if (e.origin !== "https://dashboard.flotme.ai") return;
     const data = e.data;
     if (!data || data.source !== "flot-dashboard" || data.type !== "menu-preview" || !data.menu) return;
-    previewDoc = data.menu as DashboardDoc;
-    previewSubs.forEach((fn) => fn());
+    const normalized = normalizeDoc(data.menu);
+    if (normalized) {
+      previewDoc = normalized;
+      previewSubs.forEach((fn) => fn());
+    }
   });
-  window.parent.postMessage({ source: "flot-site", type: "preview-ready" }, "*");
+  window.parent.postMessage(
+    { source: "flot-site", type: "preview-ready" },
+    "https://dashboard.flotme.ai"
+  );
 }
 
 export function useMenu(): MenuCategory[] {
@@ -84,7 +169,7 @@ export function useMenu(): MenuCategory[] {
     let cancelled = false;
     initPreview();
     const applyDoc = (d: DashboardDoc | null) => {
-      if (cancelled || !d || !Array.isArray(d.sections) || !d.sections.length) return;
+      if (cancelled || !d) return;
       const adapted = adapt(d);
       if (adapted.length) setCategories(adapted);
     };
