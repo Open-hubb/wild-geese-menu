@@ -16,6 +16,7 @@ interface CartContextType {
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
+  currency: string;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
 }
@@ -112,6 +113,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const price = parseFloat(ci.item.price.replace(/[^0-9.]/g, "")) || 0;
     return sum + price * ci.quantity;
   }, 0);
+  const currency = items[0]?.item.currency || "SLL";
 
   return (
     <CartContext.Provider
@@ -123,6 +125,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         totalItems,
         totalPrice,
+        currency,
         isCartOpen,
         setIsCartOpen,
       }}

@@ -33,7 +33,7 @@ function ModalItemCard({ item }: { item: MenuItem }) {
           </p>
         )}
         <p className="mt-1.5 text-sm font-semibold text-accent-copper">
-          SLL {item.price}
+          {item.currency || "SLL"} {item.price}
         </p>
       </div>
       <button
@@ -52,7 +52,7 @@ function ModalItemCard({ item }: { item: MenuItem }) {
 }
 
 function FloatingCartBadge({ onOpenCart }: { onOpenCart: () => void }) {
-  const { totalItems, totalPrice } = useCart();
+  const { totalItems, totalPrice, currency } = useCart();
   const [bounce, setBounce] = useState(false);
   const prevCount = useRef(totalItems);
 
@@ -81,7 +81,7 @@ function FloatingCartBadge({ onOpenCart }: { onOpenCart: () => void }) {
         </span>
       </div>
       <span className="text-sm font-bold text-[#C4853A]">
-        SLL {totalPrice.toLocaleString()}
+        {currency} {totalPrice.toLocaleString()}
       </span>
     </button>
   );

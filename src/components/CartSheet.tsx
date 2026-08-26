@@ -9,7 +9,7 @@ interface CartSheetProps {
 }
 
 export default function CartSheet({ onCheckout }: CartSheetProps) {
-  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, clearCart, totalPrice } =
+  const { items, isCartOpen, setIsCartOpen, updateQuantity, removeItem, clearCart, totalPrice, currency } =
     useCart();
 
   return (
@@ -70,7 +70,7 @@ export default function CartSheet({ onCheckout }: CartSheetProps) {
                           {cartItem.item.name}
                         </p>
                         <p className="text-xs text-accent-copper mt-0.5">
-                          SLL {cartItem.item.price}
+                          {cartItem.item.currency || currency} {cartItem.item.price}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -111,7 +111,7 @@ export default function CartSheet({ onCheckout }: CartSheetProps) {
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-sm text-text-secondary">Total</span>
                   <span className="text-lg font-bold text-accent-copper">
-                    SLL {totalPrice.toLocaleString()}
+                    {currency} {totalPrice.toLocaleString()}
                   </span>
                 </div>
                 <button
