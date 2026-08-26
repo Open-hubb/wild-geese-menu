@@ -1,16 +1,19 @@
 "use client";
 
 import { Phone, MapPin } from "lucide-react";
+import type { MenuBranding } from "@/data/useMenu";
 
-export default function Header() {
+export default function Header({ branding }: { branding: MenuBranding }) {
+  const phone = branding.phone.replace(/[^\d+]/g, "");
+
   return (
     <header className="relative px-5 pt-6 pb-5 text-center">
       {/* Subtle warm radial glow behind the logo */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-72 h-72 bg-accent-copper/5 rounded-full blur-3xl pointer-events-none" />
       <div className="relative mb-3">
         <img
-          src="/logo.png"
-          alt="The Wild Geese Irish Pub"
+          src={branding.logoUrl || "/logo.png"}
+          alt={branding.restaurantName}
           className="w-44 mx-auto object-contain drop-shadow-lg"
           width={176}
           height={176}
@@ -29,11 +32,11 @@ export default function Header() {
         </a>
         <span className="text-border-light">|</span>
         <a
-          href="tel:+23299100109"
+          href={`tel:${phone}`}
           className="flex items-center gap-1.5 hover:text-accent-copper transition-colors"
         >
           <Phone size={12} className="text-accent-copper/70" />
-          <span>099 100 109</span>
+          <span>{branding.phone}</span>
         </a>
       </div>
     </header>

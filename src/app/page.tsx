@@ -7,16 +7,17 @@ import CategoryModal from "@/components/CategoryModal";
 import FloatingBar from "@/components/FloatingBar";
 import CartSheet from "@/components/CartSheet";
 import CheckoutModal from "@/components/CheckoutModal";
-import { categories } from "@/data/menu";
 import { useCart } from "@/context/CartContext";
+import { useMenu } from "@/data/useMenu";
 
 export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const { setIsCartOpen } = useCart();
+  const menu = useMenu();
 
   const activeCategory = selectedCategory
-    ? categories.find((c) => c.slug === selectedCategory) ?? null
+    ? menu.categories.find((c) => c.slug === selectedCategory) ?? null
     : null;
 
   const handleCategorySelect = useCallback((slug: string) => {
@@ -29,7 +30,7 @@ export default function Home() {
 
   return (
     <main className="pb-28">
-      <Header />
+      <Header branding={menu.branding} />
 
       {/* Section label */}
       <div className="px-5 pt-2 pb-4">
@@ -39,14 +40,14 @@ export default function Home() {
           </h2>
           <div className="flex-1 border-b border-dashed border-border-light/40" />
           <span className="text-xs text-text-secondary">
-            {categories.length} categories
+            {menu.categories.length} categories
           </span>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto">
         <CategoryGrid
-          categories={categories}
+          categories={menu.categories}
           onCategorySelect={handleCategorySelect}
         />
       </div>

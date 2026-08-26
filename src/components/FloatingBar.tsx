@@ -9,7 +9,7 @@ interface FloatingBarProps {
 }
 
 export default function FloatingBar({ onCheckout }: FloatingBarProps) {
-  const { totalItems, totalPrice, setIsCartOpen } = useCart();
+  const { totalItems, totalPrice, currency, setIsCartOpen } = useCart();
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
@@ -35,7 +35,7 @@ export default function FloatingBar({ onCheckout }: FloatingBarProps) {
                 </span>
               </div>
               <span className="text-sm font-bold text-accent-copper">
-                SLL {totalPrice.toLocaleString()}
+                {currency} {totalPrice.toLocaleString()}
               </span>
             </motion.button>
           )}

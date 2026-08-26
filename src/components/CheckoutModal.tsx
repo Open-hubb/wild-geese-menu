@@ -10,7 +10,7 @@ interface CheckoutModalProps {
 }
 
 export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
-  const { totalPrice } = useCart();
+  const { totalPrice, currency } = useCart();
 
   // Build the Flot checkout URL with pre-filled amount
   const baseUrl = "https://pay.flotme.ai/wildgeese";
@@ -35,7 +35,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
               </span>
               {totalPrice > 0 && (
                 <span className="ml-2 text-xs text-accent-copper font-medium">
-                  SLL {totalPrice.toLocaleString()}
+                  {currency} {totalPrice.toLocaleString()}
                 </span>
               )}
             </div>
