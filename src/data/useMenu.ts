@@ -121,6 +121,7 @@ function fetchDoc(): Promise<DashboardDoc | null> {
 }
 
 function adapt(d: DashboardDoc): MenuCategory[] {
+  const currency = d.branding?.currency || "SLL";
   return d.sections.map((s) => ({
     id: s.id,
     name: s.title,
@@ -134,6 +135,7 @@ function adapt(d: DashboardDoc): MenuCategory[] {
         it.variants && it.variants.length
           ? it.variants.map((v) => `${v.label} ${v.price}`).join(" / ")
           : it.price,
+      currency,
     })),
   }));
 }

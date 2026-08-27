@@ -26,7 +26,7 @@ function MenuItemCard({ item }: { item: MenuItem }) {
           </p>
         )}
         <p className="mt-1.5 text-sm font-semibold text-accent-copper">
-          SLL {item.price}
+          {item.currency || "SLL"} {item.price}
         </p>
       </div>
       <button

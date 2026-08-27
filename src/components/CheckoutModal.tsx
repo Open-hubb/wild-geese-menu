@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCart } from "@/context/CartContext";
+import { useBranding } from "@/data/useMenu";
 
 interface CheckoutModalProps {
   isOpen: boolean;
@@ -10,12 +11,13 @@ interface CheckoutModalProps {
 }
 
 export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
-  const { totalPrice } = useCart();
+  const { totalPrice, currency } = useCart();
+  const branding = useBranding();
 
   // Build the Flot checkout URL with pre-filled amount
-  const baseUrl = "https://pay.flotme.ai/wildgeese";
+  const baseUrl = branding.checkoutUrl || "https://pay.flotme.ai/wildgeese";
   const checkoutUrl = totalPrice > 0
-    ? `${baseUrl}?amount=${totalPrice}`
+    ? `${baseUrl}${baseUrl.includes("?") ? "&" : "?"}amount=${encodeURIComponent(String(totalPrice))}`
     : baseUrl;
 
   return (
@@ -35,7 +37,7 @@ export default function CheckoutModal({ isOpen, onClose }: CheckoutModalProps) {
               </span>
               {totalPrice > 0 && (
                 <span className="ml-2 text-xs text-accent-copper font-medium">
-                  SLL {totalPrice.toLocaleString()}
+                  {currency} {totalPrice.toLocaleString()}
                 </span>
               )}
             </div>
